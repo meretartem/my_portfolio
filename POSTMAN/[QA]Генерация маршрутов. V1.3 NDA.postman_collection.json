@@ -1,0 +1,599 @@
+{
+	"info": {
+		"_postman_id": "682e5e7c-0415-432a-a9bd-4ceed675a0ba",
+		"name": "[QA]Генерация маршрутов. V1.3 NDA",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18601251"
+	},
+	"item": [
+		{
+			"name": "Pre-scripts",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.environment.set(\"token\", \"NDA\"); // Токен ",
+							"pm.environment.set(\"domen\", \"NDA\"); // - Тестовый домен",
+							"//pm.environment.set(\"date\", \"2022-03-03\"); // С какой даты генерировать данные",
+							"var moment = require('moment'); //задаем функцию moment",
+							"pm.environment.set(\"date\", moment().format(\"YYYY-MM-DD\"));",
+							"//ЕСЛИ ДАТА КОНКРЕТНАЯ НЕ НУЖНА, то можно использовать две строки выше, для установки сегодняшней даты автоматически",
+							"pm.environment.set(\"days\", 0); // На сколько дней вперед после даты даты генерации (date)",
+							"pm.environment.set(\"company_id\", NDA); // Выбрать компанию для которой генерятся данные",
+							"pm.environment.set(\"depot_id\", NDA)// - NDA. ",
+							"//ЕСЛИ МЕНЯЕТЕ КОМПАНИЮ, то создайте склад, и используйте его id",
+							"// NDA",
+							"",
+							"//ДОП ПАРАМЕТРЫ.",
+							"pm.environment.set(\"couriers_max\", 10); // - ВЫБРАТЬ МАКСИМАЛЬНОЕ КОЛИЧЕСТВО КУРЬЕРОВ",
+							"pm.environment.set(\"couriers_min\", 7); // - ВЫБРАТЬ МИНИМАЛЬНОЕ КОЛИЧЕСТВО КУРЬЕРОВ",
+							"pm.environment.set(\"routes_max\", 2); // - ВЫБРАТЬ МАКСИМАЛЬНОЕ КОЛИЧЕСТВО МАРШРУТОВ ДЛЯ КУРЬЕРА",
+							"pm.environment.set(\"routes_min\", 1); // - ВЫБРАТЬ МИНИМАЛЬНОЕ КОЛИЧЕСТВО МАРШРУТОВ ДЛЯ КУРЬЕРА",
+							"pm.environment.set(\"orders_max\", 6); // - ВЫБРАТЬ МАКСИМАЛЬНОЕ КОЛИЧЕСТВО ЗАКАЗОВ В МАРШРУТЕ",
+							"pm.environment.set(\"orders_min\", 6); // - ВЫБРАТЬ МИНИМАЛЬНОЕ КОЛИЧЕСТВО ЗАКАЗОВ В МАРШРУТЕ",
+							"pm.environment.set(\"routing_mode\", \"NDA\"); // NDA",
+							"pm.environment.set(\"positionCounter\", 5); // количество точек в сгенерированном треке",
+							"pm.environment.set(\"schet_couriers\", 0);",
+							"pm.environment.set(\"schet_orders\", 0);",
+							"pm.environment.set(\"schet_routes\", 0);",
+							"pm.environment.set(\"n\", 1);",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "tokenType",
+							"value": "",
+							"type": "string"
+						},
+						{
+							"key": "accessToken",
+							"value": "{{token}}",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"NDA\": \"{{depot_number}}\",\n        \"NDA\": \"{{depot_name}}\",\n        \"NDA\": \"{{geocode}}\",\n        \"lat\": {{randlat}},\n        \"lon\": {{randlon}},\n        \"time_interval\": \"09:00-23:00\",\n        \"order_service_duration_s\": 10,\n\t\t\"service_duration_s\": 10,\n        \"description\": \"{{description}}\",\n        \"allow_route_editing\": true\n    }\n]"
+				},
+				"url": {
+					"raw": "https://{{domen}}.NDA.NDA/NDA/NDA/companies/{{company_id}}",
+					"protocol": "https",
+					"host": [
+						"{{domen}}",
+						"NDA",
+						"NDA"
+					],
+					"path": [
+						"NDA",
+						"NDA",
+						"companies",
+						"{{company_id}}"
+					]
+				},
+				"description": "Запрос на создание склада."
+			},
+			"response": []
+		},
+		{
+			"name": "Create Couriers",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Генерация номера курьера.",
+							"pm.environment.set(\"courier_number\", _.random(1000000000, 9999999999));",
+							"",
+							"// Генерация имени курьера.",
+							"pm.environment.set(\"courier_name\", \"NDA [\" + pm.environment.get(\"courier_number\") + \"]\" );",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Получаем ID курьера, записывем в переменную.",
+							"var settings = {",
+							"    url: 'https://' + pm.environment.get(\"domen\") + \".NDA.NDA/NDA/NDA/companies/\" + pm.environment.get(\"company_id\") + \"/couriers?number=\" + pm.environment.get(\"courier_number\"),",
+							"    method: \"GET\",",
+							"    header: {",
+							"        \"content-type\": \"application/json\",",
+							"        \"accept\": \"application/json\",",
+							"        \"authorization\": \"Bearer\" + \" \" + pm.environment.get(\"token\")",
+							"    },",
+							"    body: {}",
+							"};",
+							"",
+							"pm.sendRequest(settings, (error, response) => {",
+							"    var arr = response.json();",
+							"    pm.environment.set(\"courier_id\", arr[0].id);",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "tokenType",
+							"value": "",
+							"type": "string"
+						},
+						{
+							"key": "accessToken",
+							"value": "{{token}}",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"NDA\": \"{{courier_name}}\",\n        \"NDA\": \"{{courier_number}}\",\n        \"NDA\": \"+7(000)0000000\",\n        \"sms_enabled\": false\n    }\n]"
+				},
+				"url": {
+					"raw": "https://{{domen}}.NDA.NDA/NDA/NDA/companies/{{company_id}}/couriers-NDA",
+					"protocol": "https",
+					"host": [
+						"{{domen}}",
+						"NDA",
+						"NDA"
+					],
+					"path": [
+						"NDA",
+						"NDA",
+						"companies",
+						"{{company_id}}",
+						"couriers-NDA"
+					]
+				},
+				"description": "Запрос на создание курьера."
+			},
+			"response": []
+		},
+		{
+			"name": "Create Routes",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Генерим номер маршрута",
+							"pm.environment.set(\"route_number\",  'NDA' + _.random(10000, 99999));",
+							"",
+							"// Генерим imei",
+							"pm.environment.set(\"imei\", _.random(100000000000000, 999999999999999));",
+							"//pm.environment.set(\"route_id\", _.random(1000000, 9999999));",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Получаем ID маршрута, записывем в переменную.",
+							"var settings = {",
+							"    url: 'https://' + pm.environment.get(\"domen\") + \".NDA.NDA/NDA/NDA/companies/\" + pm.environment.get(\"company_id\") + \"/NDA?date=\" + /*\"2020-12-04\" + \"&number=\" + pm.environment.get(\"route_number\"), */pm.environment.get(\"date\") + \"&number=\" + pm.environment.get(\"route_number\"),",
+							"    method: \"GET\",",
+							"    header: {",
+							"        \"content-type\": \"application/json\",",
+							"        \"accept\": \"application/json\",",
+							"        \"authorization\": \"Bearer\" + \" \" + pm.environment.get(\"token\")",
+							"    },",
+							"    body: {}",
+							"};",
+							"",
+							"pm.sendRequest(settings, (error, response) => {",
+							"    var arr = response.json();",
+							"    pm.environment.set(\"route_id\", arr[0].id);",
+							"    switch(arr[0].routing_mode) {",
+							"        case \"driving\" :",
+							"            pm.environment.set(\"routing_mode\", \"transit\");",
+							"        break;",
+							"        case \"transit\" :",
+							"            pm.environment.set(\"routing_mode\", \"truck\");",
+							"        break;",
+							"        case \"truck\" :",
+							"            pm.environment.set(\"routing_mode\", \"walking\");",
+							"        break;",
+							"        case \"walking\" :",
+							"            pm.environment.set(\"routing_mode\", \"driving\");",
+							"        break;",
+							"    }",
+							"    ",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "tokenType",
+							"value": "",
+							"type": "string"
+						},
+						{
+							"key": "accessToken",
+							"value": "{{token}}",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"NDA\": {{courier_id}},\n        \"NDA\": \"{{date}}\",\n        \"NDA\": {{depot_id}},\n        \"NDA\":\"{{route_number}}\",\n        \n        \"NDA\": \"{{routing_mode}}\"\n    }\n]"
+				},
+				"url": {
+					"raw": "https://{{domen}}.NDA.NDA/NDA/NDA/companies/{{company_id}}/routes-NDA",
+					"protocol": "https",
+					"host": [
+						"{{domen}}",
+						"NDA",
+						"NDA"
+					],
+					"path": [
+						"NDA",
+						"NDA",
+						"companies",
+						"{{company_id}}",
+						"routes-NDA"
+					]
+				},
+				"description": "Запрос на создание маршрута."
+			},
+			"response": []
+		},
+		{
+			"name": "Create Orders",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Тут запрос на получение ID заказа",
+							"    var settings = {",
+							"    url: 'https://' + pm.environment.get(\"domen\") + \".NDA.NDA/NDA/NDA/companies/\" + pm.environment.get(\"company_id\") + \"/order-details?order_number=\" + pm.environment.get(\"order_number\"),",
+							"    method: \"GET\",",
+							"    header: {",
+							"        \"content-type\": \"application/json\",",
+							"        \"accept\": \"application/json\",",
+							"        \"authorization\": \"Bearer\" + \" \" + pm.environment.get(\"token\")",
+							"    },",
+							"    body: {}",
+							"};",
+							"",
+							"    pm.sendRequest(settings, (error, response) => {",
+							"    var arr = response.json();",
+							"    pm.environment.set(\"order_id\", arr[0].order_id);",
+							"});",
+							"",
+							"// Тут запрос на генерацию статусов ",
+							"    var settingsV = {",
+							"        url: 'https://' + pm.environment.get(\"domen\") + \".NDA.NDA/NDA/NDA/couriers/\" + pm.environment.get(\"courier_id\") + \"/routes/\" + pm.environment.get(\"route_id\") + \"/orders/\" + pm.environment.get(\"order_id\"),",
+							"        method: \"PATCH\",",
+							"        header: {",
+							"            \"content-type\": \"application/json\",",
+							"            \"accept\": \"application/json\",",
+							"            \"authorization\": \"Bearer\" + \" \" + pm.environment.get(\"token\")",
+							"        },",
+							"        body: {",
+							"            mode: \"raw\",",
+							"            raw: JSON.stringify({",
+							"\t\t\"status\": pm.environment.get(\"statuses\")",
+							"        })",
+							"        }};",
+							"        ",
+							"    pm.sendRequest(settingsV, (error, response) => {});",
+							"    ",
+							"// ...Макаронина очередности генерации данных, лучше не трогать",
+							"if (pm.environment.get(\"schet_orders\") < _.random(pm.environment.get(\"orders_min\"), pm.environment.get(\"orders_max\")) - 1) ",
+							"{",
+							"    postman.setNextRequest('Create Orders');",
+							"    pm.environment.set(\"schet_orders\", parseInt(pm.environment.get(\"schet_orders\")) + 1);",
+							"}",
+							"else ",
+							"{ ",
+							"    // Тут мы посылаем запрос типа курьер посмотрел с телефона и построил маршрут",
+							"    ",
+							"    var moment = require('moment');",
+							"   ",
+							"    // Пушим GPS",
+							"    const counter = pm.environment.get(\"positionCounter\");",
+							"    for (let i = 0; i < counter; i++) {",
+							"      let settingsY = {",
+							"        url: 'https://' + pm.environment.get(\"domen\") + \".NDA.NDA/NDA/NDA/couriers/\" + pm.environment.get(\"courier_id\") + \"/routes/\" + pm.environment.get(\"route_id\") + \"/NDA-positions\",",
+							"        method: \"POST\",",
+							"        header: {",
+							"            \"content-type\": \"application/json\",",
+							"            \"accept\": \"application/json\",",
+							"            \"authorization\": \"Bearer\" + \" \" + pm.environment.get(\"token\")",
+							"        },",
+							"        body: {",
+							"            mode: \"raw\",",
+							"            raw: JSON.stringify(",
+							"\t\t{",
+							"  \"positions\": [",
+							"    {",
+							"      \"accuracy\": 100,",
+							"      \"latitude\": pm.environment.get(\"gps_lat_ot\"),",
+							"      \"longitude\": pm.environment.get(\"gps_lon_ot\"),",
+							"      \"time\": pm.environment.get(\"gps_time\")",
+							"    }",
+							"  ]",
+							"}",
+							"  )",
+							"        }};  ",
+							"",
+							"        pm.sendRequest(settingsY, (error, response) => {});",
+							"",
+							"        let lat = pm.environment.get(\"gps_lat_ot\") + _.random(-0.0005, 0.0005);",
+							"        pm.environment.set(\"gps_lat_ot\", lat);",
+							"        let lon = pm.environment.get(\"gps_lon_ot\") + _.random(0, 0.002);",
+							"        pm.environment.set(\"gps_lon_ot\", lon);",
+							"        pm.environment.set(\"gps_time\", moment().add(i, 'seconds').format());",
+							"",
+							"",
+							"    }",
+							"",
+							"    ",
+							"\tif (pm.environment.get(\"schet_routes\") < _.random(pm.environment.get(\"routes_min\"), pm.environment.get(\"routes_max\")) - 1) ",
+							"\t    {",
+							"\t\t\tpostman.setNextRequest('Create Routes');",
+							"\t\t\tpm.environment.set(\"schet_routes\", parseInt(pm.environment.get(\"schet_routes\")) + 1); ",
+							"\t    }",
+							"        else { ",
+							"            if (pm.environment.get(\"schet_couriers\") < _.random(pm.environment.get(\"couriers_min\"), pm.environment.get(\"couriers_max\")) - 1) ",
+							"                {",
+							"\t\t\tpostman.setNextRequest('Create Couriers');",
+							"\t\t\tpm.environment.set(\"schet_couriers\", parseInt(pm.environment.get(\"schet_couriers\")) + 1); ",
+							"                }",
+							"\t\t\telse ",
+							"\t\t\t\t{",
+							"\t\t\t\tif (0 < pm.environment.get(\"days\")) {",
+							"                    const generationDate = moment(pm.environment.get(\"date\"), 'YYYY-MM-DD');",
+							"                    pm.environment.set(\"date\", moment(generationDate).add(pm.environment.get(\"n\"), 'days').format('YYYY-MM-DD'));",
+							"                    pm.environment.set(\"days\", parseInt(pm.environment.get(\"days\")) - 1);",
+							"                    pm.environment.set(\"n\", pm.environment.get(\"n\") + 1);",
+							"                    pm.environment.set(\"schet_orders\", 0);",
+							"                    pm.environment.set(\"schet_couriers\", 0);",
+							"                    pm.environment.set(\"schet_routes\", 0);",
+							"                    postman.setNextRequest('Create Couriers'); ",
+							"\t\t\t\t}",
+							"\t\t\t\telse {",
+							"\t\t\t\t    pm.environment.set(\"schet_couriers\", 0);",
+							"\t\t\t\t    postman.setNextRequest(null); ",
+							"\t\t\t\t}",
+							"\t\t\t\t}",
+							"\t        pm.environment.set(\"schet_routes\", 0);",
+							"\t\t    }",
+							"    pm.environment.set(\"schet_orders\", 0);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Генерирация номера заказа",
+							"pm.environment.set(\"order_number\", _.random(0, 9999999999));",
+							"",
+							"// Генерация координат заказа",
+							"pm.environment.set(\"randlat_order\", 55.20587+ _.random(0.1, 0.9));",
+							"pm.environment.set(\"randlon_order\", 37.65754+ _.random(0.1, 0.9));",
+							"",
+							"// Пулим координаты в геокодер - получаем улицу и записываем улицу в переменную",
+							"pm.sendRequest('https://NDA.NDA.NDA/NDA/?format=json&NDA=' + pm.environment.get(\"randlon_order\") + ',' + pm.environment.get(\"randlat_order\") + '&apikey=NDA&lang=ru_RU&results=1', function (error, response) {",
+							"    var arr = response.json();",
+							"    pm.environment.set(\"geocode_order\", arr.response.GeoObjectCollection.featureMember[0].GeoObject.metaDataProperty.GeocoderMetaData.text);",
+							"});",
+							"",
+							"// Выставляем статус для заказа",
+							"var statuses = ['new', 'cancelled', 'finished' , 'confirmed'];",
+							"statuses = statuses[3];//_.random(0, 3)];",
+							"pm.environment.set(\"statuses\", statuses);",
+							"",
+							"// Генерим интервал для заказа",
+							"var ot = _.random(07, 08);",
+							"var to = _.random(21, 23);",
+							"var a;",
+							"if (ot > to) {",
+							"    a = to;",
+							"    to = ot;",
+							"    ot = a;",
+							"}",
+							"if (ot == to) {",
+							"    ot = ot - 1;",
+							"}",
+							"pm.environment.set(\"interval\", ot + \"-\" + to);",
+							"",
+							"",
+							"// Пушим GPS положение",
+							"pm.environment.set(\"gps_lat_ot\", 55 + _.random(0.1, 0.9));",
+							"pm.environment.set(\"gps_lon_ot\", 37 + _.random(0.1, 0.9));",
+							" pm.environment.set(\"gps_lat_to\", 55 + _.random(0.1, 0.9));",
+							" pm.environment.set(\"gps_lon_to\", 37 + _.random(0.1, 0.9));",
+							"var moment = require('moment');",
+							"pm.environment.set(\"gps_time\", moment().format());",
+							"//pm.environment.set(\"gps_time_o\", moment().subtract(5, 'minutes').format());",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "tokenType",
+							"value": "",
+							"type": "string"
+						},
+						{
+							"key": "accessToken",
+							"value": "{{token}}",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n\t{\n\t\t\"NDA\": \"{{order_number}}\",\n\t\t\"NDA\": {{route_id}}, \n\t\t\"NDA\": \"{{geocode_order}}\", \n\t\t\"lat\": {{randlat_order}}, \n\t\t\"lon\": {{randlon_order}}, \n\t\t\"NDA\": \"NDA\", \n\t\t\"NDA\": \"NDA\", \n\t\t\"time_interval\": \"{{interval}}\",\n\t\t\"service_duration_s\": 10\n\t}\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{domen}}.NDA.NDA/NDA/NDA/companies/{{company_id}}/orders-NDA",
+					"protocol": "https",
+					"host": [
+						"{{domen}}",
+						"NDA",
+						"NDA"
+					],
+					"path": [
+						"NDA",
+						"NDA",
+						"companies",
+						"{{company_id}}",
+						"orders-NDA"
+					]
+				},
+				"description": "Запрос на создание заказов."
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "oauth2",
+		"oauth2": [
+			{
+				"key": "accessToken",
+				"value": "{{token}}",
+				"type": "string"
+			},
+			{
+				"key": "addTokenTo",
+				"value": "header",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

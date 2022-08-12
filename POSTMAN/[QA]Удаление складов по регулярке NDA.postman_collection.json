@@ -1,0 +1,277 @@
+{
+	"info": {
+		"_postman_id": "4d5d1405-9f16-4209-aa53-e5c206b435e9",
+		"name": "[QA]Удаление складов по регулярке NDA",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18601251"
+	},
+	"item": [
+		{
+			"name": "Get Depo Array",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"//Задаем все нужные переменные \r",
+							"pm.environment.set(\"token\", \"NDANDANDANDA\"); // Токен \r",
+							"pm.environment.set(\"domen\", \"NDA\"); // - Тестовый домен\r",
+							"pm.environment.set(\"company_id\", NDA); // Выбрать компанию для которой генерятся данные\r",
+							"pm.environment.set(\"count\", 0);\r",
+							"\r",
+							"\r",
+							"\r",
+							"//Сначала достаем все id складов в компании\r",
+							"let depotid = {\r",
+							"    url: 'https://' + pm.environment.get(\"domen\") + \".NDA.NDA/NDA/NDA/companies/\" + pm.environment.get(\"company_id\") + '/depots',\r",
+							"    method: \"GET\",\r",
+							"    header: {\r",
+							"        \"content-type\": \"application/json\",\r",
+							"        \"accept\": \"application/json\",\r",
+							"        \"authorization\": \"Bearer\" + \" \" + pm.environment.get(\"token\")\r",
+							"    },\r",
+							"    body: {}\r",
+							"};\r",
+							"let arr_depot_id = [];\r",
+							"let i = 0;\r",
+							"pm.sendRequest(depotid, (error, response) => {\r",
+							"    var arr = response.json();\r",
+							"             while (i < arr.length) {\r",
+							"            arr_depot_id.push(arr[i].id);\r",
+							"            arr_depot_id.push(arr[i].name)\r",
+							"            i = i + 1;\r",
+							"            }\r",
+							"}); \r",
+							"//Наш массив с id складов\r",
+							"pm.collectionVariables.set(\"depot_array\", arr_depot_id);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let depo_id_deletes = [];\r",
+							"pm.collectionVariables.set(\"depo_id_delete\", depo_id_deletes);\r",
+							"pm.environment.set(\"count\", 1);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://{{domen}}.NDA.NDA/NDA/NDA/companies/{{company_id}}",
+					"protocol": "https",
+					"host": [
+						"{{domen}}",
+						"NDA",
+						"NDA"
+					],
+					"path": [
+						"NDA",
+						"NDA",
+						"companies",
+						"{{company_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get depo for delete",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"let arr_depot_id = pm.collectionVariables.get(\"depot_array\");\r",
+							"\r",
+							"let count_array = pm.environment.get(\"count\");\r",
+							"let depo_id_deletes = [];\r",
+							"let stop = arr_depot_id.length;\r",
+							"let x = 0;\r",
+							"let str;\r",
+							"pm.collectionVariables.set(\"test\", arr_depot_id[count_array]);\r",
+							"\r",
+							"const regex = /^[(]\\d{10}[)]\\s\\w{10}/;\r",
+							"while (count_array < stop) {\r",
+							"    str = arr_depot_id[count_array];\r",
+							"    \r",
+							"    if (regex.test(str)) {\r",
+							"        x = count_array-1;\r",
+							"        depo_id_deletes.push(arr_depot_id[x]);\r",
+							"        count_array = count_array+2\r",
+							"        regex.lastIndex =0\r",
+							"    } else {\r",
+							"        count_array = count_array+2\r",
+							"      regex.lastIndex =0\r",
+							"    }\r",
+							"\r",
+							"}\r",
+							"pm.collectionVariables.set(\"depo_id_delete\", depo_id_deletes);\r",
+							"pm.collectionVariables.set(\"stroke1\", str);\r",
+							"pm.environment.set(\"count_d\", 0);\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://{{domen}}.NDA.NDA/NDA/NDA/companies/{{company_id}}",
+					"protocol": "https",
+					"host": [
+						"{{domen}}",
+						"NDA",
+						"NDA"
+					],
+					"path": [
+						"NDA",
+						"NDA",
+						"companies",
+						"{{company_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete depot",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"let arr_depot_id = pm.collectionVariables.get(\"depo_id_delete\");\r",
+							"\r",
+							"let count_array = pm.environment.get(\"count_d\");\r",
+							"\r",
+							"pm.environment.set(\"depot_id_while_delete\", arr_depot_id[count_array])\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let arr_depot_id = pm.collectionVariables.get(\"depo_id_delete\");\r",
+							"let stop = arr_depot_id.length;\r",
+							"if (pm.environment.get(\"count_d\") < stop) {\r",
+							"    let count = pm.environment.get(\"count_d\") + 1;\r",
+							"    pm.environment.set(\"count_d\", count);\r",
+							"    postman.setNextRequest('Delete depot')\r",
+							"};"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "https://{{domen}}.NDA.NDA/NDA/NDA/companies/{{company_id}}/depots/{{depot_id_while_delete}}?NDA",
+					"protocol": "https",
+					"host": [
+						"{{domen}}",
+						"NDA",
+						"NDA"
+					],
+					"path": [
+						"NDA",
+						"NDA",
+						"companies",
+						"{{company_id}}",
+						"depots",
+						"{{depot_id_while_delete}}"
+					],
+					"query": [
+						{
+							"key": "NDA",
+							"value": null
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "oauth2",
+		"oauth2": [
+			{
+				"key": "tokenType",
+				"value": "",
+				"type": "string"
+			},
+			{
+				"key": "accessToken",
+				"value": "{{token}}",
+				"type": "string"
+			},
+			{
+				"key": "addTokenTo",
+				"value": "header",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "depot_array",
+			"value": ""
+		},
+		{
+			"key": "depo_id_delete",
+			"value": []
+		},
+		{
+			"key": "test",
+			"value": ""
+		},
+		{
+			"key": "stroke1",
+			"value": ""
+		}
+	]
+}
