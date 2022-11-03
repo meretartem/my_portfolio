@@ -1,0 +1,594 @@
+{
+	"info": {
+		"_postman_id": "fbb44d88-6c01-4ad8-82d9-d7d5f8b314da",
+		"name": "QA.All_Types_routes v1.1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18601251"
+	},
+	"item": [
+		{
+			"name": "Create Couriers",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.environment.set(\"token\", \"AQAAAABa4u8EAAeL9EXVS1AYq0m9sCGBso8iu8o\"); // Токен",
+							"pm.environment.set(\"depot_id\", 66368); //routeQ generation",
+							"//pm.environment.set(\"date\", \"2022-05-06\");",
+							"var moment = require('moment'); //задаем функцию moment",
+							"pm.environment.set(\"date\", moment().format(\"YYYY-MM-DD\"));",
+							"",
+							"pm.environment.set(\"company_id\", 598); // Выбрать компанию для которой генерятся данные",
+							"// Генерация номера курьера.",
+							"pm.environment.set(\"courier_number\", _.random(100000, 999999));",
+							"",
+							"// Генерация имени курьера.",
+							"pm.environment.set(\"courier_name\", \"ForPavel [\" + pm.environment.get(\"courier_number\") + \"]\" );",
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Получаем ID курьера, записывем в переменную.",
+							"var settings = {",
+							"    url: \"https://courier.yandex.ru/api/v1/companies/\" + pm.environment.get(\"company_id\") + \"/couriers?number=\" + pm.environment.get(\"courier_number\"),",
+							"    method: \"GET\",",
+							"    header: {",
+							"        \"content-type\": \"application/json\",",
+							"        \"accept\": \"application/json\",",
+							"        \"authorization\": \"Bearer\" + \" \" + pm.environment.get(\"token\")",
+							"    },",
+							"    body: {}",
+							"};",
+							"",
+							"pm.sendRequest(settings, (error, response) => {",
+							"    var arr = response.json();",
+							"    pm.environment.set(\"courier_id\", arr[0].id);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"type": "text",
+						"value": "application/json"
+					},
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"name\": \"{{courier_name}}\",\n        \"number\": \"{{courier_number}}\",\n        \"phone\": \"+7(000)0000000\",\n        \"sms_enabled\": false\n    }\n]"
+				},
+				"url": {
+					"raw": "https://courier.yandex.ru/api/v1/companies/{{company_id}}/couriers-batch",
+					"protocol": "https",
+					"host": [
+						"courier",
+						"yandex",
+						"ru"
+					],
+					"path": [
+						"api",
+						"v1",
+						"companies",
+						"{{company_id}}",
+						"couriers-batch"
+					]
+				},
+				"description": "Запрос на создание курьера."
+			},
+			"response": []
+		},
+		{
+			"name": "Create Routes",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Генерим номер маршрута\r",
+							"pm.environment.set(\"route_number\", 'ForPavel ('+ _.random(1000000, 9999999)+')');\r",
+							"\r",
+							"// Генерим imei\r",
+							"pm.environment.set(\"imei\", _.random(100000000000000, 999999999999999));"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Получаем ID маршрута, записывем в переменную.\r",
+							"var settings = {\r",
+							"    url: \"https://courier.yandex.ru/api/v1/companies/\" + pm.environment.get(\"company_id\") + \"/routes?date=\" + pm.environment.get(\"date\") + \"&number=\" + pm.environment.get(\"route_number\"),\r",
+							"    method: \"GET\",\r",
+							"    header: {\r",
+							"        \"content-type\": \"application/json\",\r",
+							"        \"accept\": \"application/json\",\r",
+							"        \"authorization\": \"Bearer\" + \" \" + pm.environment.get(\"token\")\r",
+							"    },\r",
+							"    body: {}\r",
+							"};\r",
+							"\r",
+							"pm.sendRequest(settings, (error, response) => {\r",
+							"    var arr = response.json();\r",
+							"    pm.environment.set(\"route_id\", arr[0].id);\r",
+							"});\r",
+							"\r",
+							"// Получаем номер склада, записывем в переменную.\r",
+							"var settings = {\r",
+							"    url: \"https://courier.yandex.ru/api/v1/companies/\" + pm.environment.get(\"company_id\") + \"/depots/\" + pm.environment.get(\"depot_id\"),\r",
+							"    method: \"GET\",\r",
+							"    header: {\r",
+							"        \"content-type\": \"application/json\",\r",
+							"        \"accept\": \"application/json\",\r",
+							"        \"authorization\": \"Bearer\" + \" \" + pm.environment.get(\"token\")\r",
+							"    },\r",
+							"    body: {}\r",
+							"};\r",
+							"\r",
+							"pm.sendRequest(settings, (error, response) => {\r",
+							"    var depot_number = response.json();\r",
+							"    pm.environment.set(\"depot_number\", depot_number.number);\r",
+							"});\r",
+							"pm.environment.set('x', 0);\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\r\n    {\r\n        \"courier_id\": {{courier_id}},\r\n        \"date\": \"{{date}}\",\r\n        \"depot_id\": {{depot_id}},\r\n        \"number\": \"{{route_number}}\",\r\n        \"imei\": {{imei}}\r\n    }\r\n]"
+				},
+				"url": {
+					"raw": "https://courier.yandex.ru/api/v1/companies/{{company_id}}/routes-batch",
+					"protocol": "https",
+					"host": [
+						"courier",
+						"yandex",
+						"ru"
+					],
+					"path": [
+						"api",
+						"v1",
+						"companies",
+						"{{company_id}}",
+						"routes-batch"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create orders",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"",
+							"let x = pm.environment.get(\"x\");",
+							"let order_obj = pm.environment.get('order_obj');",
+							"",
+							"if (x == 9) {",
+							"   postman.setNextRequest('Задать узлы')",
+							"  ",
+							"} else {",
+							"if (x == 8) {",
+							"    pm.environment.set(\"order_2\", order_obj);",
+							"  ",
+							"   ",
+							"    postman.setNextRequest('Create orders')",
+							"} else {",
+							"if (x == 7) {",
+							"    pm.environment.set(\"order_3\", order_obj);",
+							"   ",
+							"    ",
+							"    postman.setNextRequest('Create orders')",
+							"} else {",
+							"if (x == 6) {",
+							"    pm.environment.set(\"order_4\", order_obj);",
+							"    ",
+							"    ",
+							"    postman.setNextRequest('Create orders')",
+							"} else {",
+							"if (x == 5) {",
+							"    pm.environment.set(\"order_5\", order_obj);",
+							"   ",
+							"    ",
+							"    postman.setNextRequest('Create orders')",
+							"} else {",
+							"if (x == 4) {",
+							"    pm.environment.set(\"order_6\", order_obj);",
+							"    ",
+							"    ",
+							"    postman.setNextRequest('Create orders')",
+							"} else {",
+							"if (x == 3) {",
+							"    pm.environment.set(\"order_7\", order_obj);",
+							"    ",
+							"   ",
+							"    postman.setNextRequest('Create orders')",
+							"} else {",
+							"if (x == 2) {",
+							"    pm.environment.set(\"order_8\", order_obj);",
+							"       ",
+							"    postman.setNextRequest('Create orders')",
+							"} else {",
+							"if (x==1) {",
+							"      pm.environment.set(\"order_1\", order_obj);",
+							"    ",
+							"    ",
+							"    postman.setNextRequest('Create orders')",
+							"}}}}}}}}}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"let order_number =  _.random(0, 9999999999);",
+							"let route_id = pm.environment.get('route_id');",
+							"",
+							"let lat1= 55.20587+ _.random(0.1, 0.9);",
+							"let lon1 = 37.65754+ _.random(0.1, 0.9);",
+							"",
+							"// Пулим координаты в геокодер - получаем улицу и записываем улицу в переменную",
+							"pm.sendRequest('https://geocode-maps.yandex.ru/1.x/?format=json&geocode=' + `${lon1}` + ',' + `${lat1}` + '&apikey=4bee3025-bc22-4aaf-b8b7-90206d120ae4&lang=ru_RU&results=1', function (error, response) {",
+							"    var arr = response.json();",
+							"    pm.environment.set(\"geocode_order\", arr.response.GeoObjectCollection.featureMember[0].GeoObject.metaDataProperty.GeocoderMetaData.text);",
+							"});",
+							"let geocode = pm.environment.get('geocode_order');",
+							"//STATUS",
+							"var statuses = ['new', 'cancelled', 'finished' , 'confirmed'];",
+							"statuses = \"confirmed\" //statuses[_.random(0, 3)];",
+							"//INTERVAL",
+							"// Генерим интервал для заказа",
+							"var ot = _.random(00, 13);",
+							"var to = _.random(13, 23);",
+							"var a;",
+							"if (ot > to) {",
+							"    a = to;",
+							"    to = ot;",
+							"    ot = a;",
+							"}",
+							"if (ot == to) {",
+							"    ot = ot - 1;",
+							"}",
+							"let interval = `${ot}` + \"-\" + `${to}`;",
+							"let i = pm.environment.get('x');",
+							"if (i==4) {",
+							"    pm.environment.set(\"orderpickup\", order_number);",
+							"} else {",
+							"    if (i ==5) {",
+							"       pm.environment.set(\"orderdropoff\", order_number); ",
+							"    }",
+							"}",
+							"",
+							"let json = {",
+							"            type: \"order\",",
+							"            value: {",
+							"\t\t    number: `${order_number}`, ",
+							"\t\t    route_id: route_id, ",
+							"\t\t    address: `${geocode}`, ",
+							"\t\t    lat: lat1, ",
+							"\t\t    lon: lon1, ",
+							"            status: `${statuses}`,",
+							"\t\t    customer_name: \"Клиент\", ",
+							"\t\t    phone: \"+70000000000\", ",
+							"\t\t    time_interval: `${interval}`,",
+							"\t\t    service_duration_s: 10",
+							"            }",
+							"}",
+							"let json_order = JSON.stringify(json);",
+							"pm.environment.set('order_obj', json_order);",
+							"let x = pm.environment.get('x') + 1",
+							"pm.environment.set('x', x)",
+							"            ",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "tokenType",
+							"value": "",
+							"type": "string"
+						},
+						{
+							"key": "accessToken",
+							"value": "{{token}}",
+							"type": "string"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    {{order_1}},\r\n{{x}}\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://courier.yandex.ru/api/v1/companies/{{company_id}}",
+					"protocol": "https",
+					"host": [
+						"courier",
+						"yandex",
+						"ru"
+					],
+					"path": [
+						"api",
+						"v1",
+						"companies",
+						"{{company_id}}"
+					]
+				},
+				"description": "Запрос на создание заказов."
+			},
+			"response": []
+		},
+		{
+			"name": "Задать узлы",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Гараж\r",
+							"// Генерирация номера гаража\r",
+							"pm.environment.set(\"garage_number\", _.random(0, 9999999999));\r",
+							"\r",
+							"// Генерация координат гаража\r",
+							"pm.environment.set(\"randlat_garage\", 55.20587+ _.random(0.1, 0.9));\r",
+							"pm.environment.set(\"randlon_garage\", 37.65754+ _.random(0.1, 0.9));\r",
+							"\r",
+							"// Получение адреса гаража путем геокодирования координат:\r",
+							"pm.sendRequest('https://geocode-maps.yandex.ru/1.x/?format=json&geocode=' + pm.environment.get(\"randlon_garage\") + ',' + pm.environment.get(\"randlat_garage\") + '&apikey=4bee3025-bc22-4aaf-b8b7-90206d120ae4&lang=ru_RU&results=1', function (error, response) {\r",
+							"    var arr = response.json();\r",
+							"    pm.environment.set(\"geocode_garage\", arr.response.GeoObjectCollection.featureMember[0].GeoObject.metaDataProperty.GeocoderMetaData.text);\r",
+							"});\r",
+							"\r",
+							"let depot_status = ['unvisited', 'visited']\r",
+							"pm.environment.set('depot_status', \"unvisited\");//depot_status[_.random(0, 1)]);\r",
+							"pm.environment.set('depot_status1', 'unvisited');//depot_status[_.random(0, 1)]);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\r\n    {\r\n        \"type\": \"garage\",\r\n        \"value\": {\r\n            \"address\": \"{{geocode_garage}}\",\r\n            \"lat\": {{randlat_garage}},\r\n            \"lon\": {{randlon_garage}},\r\n            \"number\": \"{{garage_number}}\"\r\n            }\r\n    },\r\n    {\r\n        \"type\": \"depot\",\r\n        \"value\": {\r\n            \"number\": \"{{depot_number}}\",\r\n            \"status\": \"{{depot_status}}\"\r\n            }\r\n    },\r\n    {{order_1}},\r\n    {{order_2}},\r\n    {{order_3}},\r\n    {{order_4}},\r\n    {{order_5}},\r\n    {{order_6}},\r\n    {{order_7}},\r\n    {{order_8}},\r\n    {\r\n        \"type\": \"depot\",\r\n        \"value\": {\r\n            \"number\": \"{{depot_number}}\",\r\n            \"status\": \"{{depot_status1}}\"\r\n            }\r\n    },\r\n    {\r\n        \"type\": \"garage\",\r\n        \"value\": {\r\n            \"address\": \"{{geocode_garage}}\",\r\n            \"lat\": {{randlat_garage}},\r\n            \"lon\": {{randlon_garage}},\r\n            \"number\": \"{{garage_number}}\"\r\n            }\r\n    }\r\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://courier.yandex.ru/api/v1/companies/{{company_id}}/routes/{{route_id}}/nodes",
+					"protocol": "https",
+					"host": [
+						"courier",
+						"yandex",
+						"ru"
+					],
+					"path": [
+						"api",
+						"v1",
+						"companies",
+						"{{company_id}}",
+						"routes",
+						"{{route_id}}",
+						"nodes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Добавление pickup и drop_off",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var moment = require('moment'); //задаем функцию moment\r",
+							"pm.environment.set(\"timecount_now\", moment().format());\r",
+							"\r",
+							"let lat1= 55.20587+ _.random(0.1, 0.9);\r",
+							"let lon1 = 37.65754+ _.random(0.1, 0.9);\r",
+							"\r",
+							"let settingsY = {\r",
+							"        url: 'https://' + 'courier' + \".yandex.ru/api/v1/couriers/\" + pm.environment.get(\"courier_id\") + \"/routes/\" + pm.environment.get(\"route_id\") + \"/push-positions\",\r",
+							"        method: \"POST\",\r",
+							"        header: {\r",
+							"            \"content-type\": \"application/json\",\r",
+							"            \"accept\": \"application/json\",\r",
+							"            \"authorization\": \"Bearer\" + \" \" + pm.environment.get(\"token\")\r",
+							"        },\r",
+							"        body: {\r",
+							"            mode: \"raw\",\r",
+							"            raw: JSON.stringify(\r",
+							"\t\t{\r",
+							"  \"positions\": [\r",
+							"    {\r",
+							"      \"accuracy\": 100,\r",
+							"      \"latitude\": lat1,\r",
+							"      \"longitude\": lon1,\r",
+							"      \"time\": pm.environment.get(\"timecount_now\")\r",
+							"    }\r",
+							"  ]\r",
+							"}\r",
+							"  )\r",
+							"        }}\r",
+							"        pm.sendRequest(settingsY, (error, response) => {});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\r\n  {\r\n    \"number\": \"{{orderpickup}}\",\r\n    \"type\": \"pickup\"\r\n  },\r\n  {\r\n    \"number\": \"{{orderdropoff}}\",\r\n    \"type\": \"drop_off\"\r\n  }\r\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://courier.yandex.ru/api/v1/companies/{{company_id}}/orders-batch",
+					"protocol": "https",
+					"host": [
+						"courier",
+						"yandex",
+						"ru"
+					],
+					"path": [
+						"api",
+						"v1",
+						"companies",
+						"{{company_id}}",
+						"orders-batch"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "oauth2",
+		"oauth2": [
+			{
+				"key": "tokenType",
+				"value": "",
+				"type": "string"
+			},
+			{
+				"key": "accessToken",
+				"value": "{{token}}",
+				"type": "string"
+			},
+			{
+				"key": "addTokenTo",
+				"value": "header",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
